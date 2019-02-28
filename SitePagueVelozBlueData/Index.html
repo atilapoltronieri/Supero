@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Tasks</title>
+		
+		<!-- Compiled and minified CSS -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+		<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<link rel="stylesheet" href="css/styleHome.css">
+		<link href="lib/toaster.css" rel="stylesheet">
+		
+		<script src="http://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+
+		<!-- Compiled and minified JavaScript -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+						
+		<!-- ionic/angularjs js -->
+		<script src="lib/angular/angular.min.js"></script>
+		<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+		<script src="lib/angular-animate/angular-animate.js"></script>
+		<script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
+		<script src="lib/angular-spinner/angular-spinner.js"></script>
+		<script src="lib/toaster.min.js"></script>
+		<script src="lib/angular-ui-mask/dist/mask.js"></script>
+		<script src="lib/bs-table.js"></script>
+
+		<!-- your app's js -->
+		<script src="js/app.js"></script>
+		<script src="js/linq.js"></script>
+
+	</head>
+
+	<body ng-app="myApp" ng-controller="taskCtrl as task">
+		<toaster-container toaster-options="{'time-out': 2000, 'close-button':true, 'animation-class': 'toast-bottom-right'}"></toaster-container>
+	
+		<div class="content-header">
+			<nav>
+				<div class="nav-wrapper">
+					<!-- <a href="#" data-activates="slide-out" class="button-collapse"><i class="material-icons">menu</i></a> -->
+					<a href="#" class="brand-logo">Tasks</a>
+				  
+					<ul id="nav-mobile" class="right hide-on-med-and-down">
+						<li class="border-right"><h4 class="white-text">Bem Vindo</h4></li>
+						<li class="border-right"><a class="default-color modal-trigger pointer" href="#modalSobre"><h4 class="white-text">Ajuda</h4></a></li>
+						<!-- <li><a class="pointer"><i title="Deslogar" ng-click="logout()" class="material-icons">power_settings_new</i></a></li> -->
+					</ul>
+				</div>
+			</nav>			
+		</div>
+		
+		<div class="container p-t-20">
+			<!-- Page Content goes here -->
+			
+			<div class="row">
+				<div class="col s12 m12">
+				  <div class="card white darken-1">
+					<div class="card-content black-text slim">
+						<span class="card-title">
+							Filtros
+						</span>
+						<div class="row">
+							<div class="col s3">
+							  <label for="filtroID">ID</label>
+							  <input id="filtroID" ng-model="filtro.Id" placeholder="ID" minlength="1" maxlength="128" type="text" class="validate">
+							</div>
+							<div class="col s3">
+							  <label for="filtroTitulo">Título</label>
+							  <input id="filtroTitulo" ng-model="filtro.Titulo" placeholder="Título" minlength="1" maxlength="128" type="text" class="validate">
+						    </div>
+							<div class="col s3">
+							  <label for="FiltroStatus">Status</label>
+							  <select id="FiltroStatus" class="validate comboSelect"
+								ng-options="item as item for item in listaStatus" ng-model="filtro.Status"></select>
+						    </div>
+							<div class="col s3">
+								<a class="waves-effect waves-light default-color btn right" ng-click="aplicarFiltro()">Aplicar Filtro</a>
+							</div>
+						</div>
+					</div>
+				  </div>
+				  <div class="card white darken-1">
+					<div class="card-content black-text">
+						<span class="card-title">
+							Lista de Tasks
+							<a class="waves-effect waves-light default-color btn modal-trigger right" href="#modal1" ng-click="novoTask()">Novo Task</a>
+						</span>
+						<table class="bordered highlight">
+							<thead>
+							  <tr>
+								  <th> </th>
+								  <th>Id</th>
+								  <th>Título</th>
+								  <th>Descrição</th>
+								  <th>Status</th>
+								  <th>Data Criação</th>
+								  <th>Data Alteração</th>
+							  </tr>
+							</thead>
+							
+							<tr ng-repeat="task in listaTasksShow track by task.Id" ng-click="editarTask(task)">
+								<td><a class="pointer"><i  href="#modalDeletar" title="Deletar" ng-click="deletarTask(task.Id)" class="material-icons modal-trigger">delete</a></li></td>
+								<td class="modal-trigger pointer" href="#modal1" >{{task.Id}}</td>
+								<td class="modal-trigger pointer" href="#modal1" >{{task.Titulo}}</td>
+								<td class="modal-trigger pointer" href="#modal1" >{{task.Descricao}}</td>
+								<td class="modal-trigger pointer" href="#modal1" >{{task.Status}}</td>
+								<td class="modal-trigger pointer" href="#modal1" >{{task.DataCriacao}}</td>
+								<td class="modal-trigger pointer" href="#modal1" >{{task.DataAlteracao}}</td>
+							</tr>
+						</table>
+						
+							
+						<div class="modal-footer text-right">
+							<a class="bold black-text">Registros {{paginacao.registroInicial}} à {{paginacao.registroFinal}} de {{paginacao.registrosTotais}}</a>
+							<a ng-click="anteriorPagina()" ng-class="{'disabled': validaAnteriorPagina()}" title="Página Anterior" class="waves-effect waves-grey btn-flat pointer green white-text"><<</a>
+							<a ng-click="proximaPagina()" ng-class="{'disabled': validaProximaPagina()}" title="Próxima Página" class="waves-effect waves-grey btn-flat pointer green white-text">>></a>							
+						</div>
+					</div>
+				  </div>
+				</div>
+			</div>		
+		</div>
+		
+		<div id="modal1" class="modal">
+			<div class="modal-content">
+				<h4>Task {{objetoTela.IdTask}}</h4>
+				
+				<div class="row">
+					<form class="col s12">
+						<div class="row">
+							<div class="input-field col s6">
+							  <input id="first_name" ng-model="objetoTela.Titulo" placeholder="Nome" minlength="1" maxlength="128" type="text" class="validate" required>
+							  <label for="first_name">Título</label>
+							</div>					
+							<div class="input-field col s6">
+								<select id="listaStatus" class="validate comboSelect"
+								ng-options="item as item for item in listaStatus" ng-model="objetoTela.Status"></select>
+								<label for="first_name">Status</label>
+							</div>		
+						</div>
+					</form>
+				</div>
+				
+				<div class="row">
+					<form class="col s12">
+						<div class="row">
+							<div class="input-field col s12">
+							  <input id="first_name" ng-model="objetoTela.Descricao" placeholder="Nome" minlength="1" maxlength="128" type="text" class="validate" required>
+							  <label for="first_name">Descrição</label>
+							</div>		
+						</div>
+					</form>
+				</div>
+				
+				<div class="row">				
+					<form class="col s12">
+						<div class="row">							
+							<div class="input-field col s6">
+							  <input id="last_name" ng-model="objetoTela.DataCriacao" ui-mask="99/99/9999" placeholder="__/__/____"   type="text" class="validate" disabled>
+							  <label for="last_name">Data Criação</label>
+							</div>				
+							<div class="input-field col s6">
+							  <input id="last_name" ng-model="objetoTela.DataAlteracao" ui-mask="99/99/9999" placeholder="__/__/____"   type="text" class="validate" disabled>
+							  <label for="last_name">Data Alteração</label>
+							</div>
+						</div>		
+					</form>
+				</div>
+				
+			</div>
+			
+			<div class="modal-footer">
+				<a ng-click="salvarTask()" ng-class="{'disabled': validaSalvar()}" class="modal-action modal-close waves-effect waves-grey btn-flat pointer green white-text">Salvar</a>
+				<a class="modal-action modal-close waves-effect waves-grey btn-flat pointer red white-text">Fechar</a>
+			</div>
+		</div>
+			
+		<div id="modalDeletar" class="modal modalDeletar">
+			<div class="modal-content">
+				<span class="card-title"><h4>Confirma Deleção</h4></span>
+				<div class="modal-footer text-right">
+					<a ng-click="confirmarDeletarTask()" class="modal-action modal-close waves-effect waves-grey btn-flat pointer green white-text">Deletar</a>
+					<a class="modal-action modal-close waves-effect waves-grey btn-flat pointer red white-text">Cancelar</a>
+				</div>
+			</div>
+		</div>
+		
+		<div id="modalSobre" class="modal modalSobre">
+			<div class="modal-content">
+				<span class="card-title"><h4>Sistema Supero</h4></span>
+				
+				<div class="modal-body"> 
+					<span>Bem vindo ao sistema da Super. Aqui você poderá inserir, atualizar e deletar suas Tasks.
+						<br/>
+						O botão de Novo Task irá te abrir uma tela para inserir todos os dados do Task que deseje Inserir.
+						<br/>
+						<br/>
+						Para editar algum Task, clique sobre o registro desejado na tabela Lista de Tasks para abrir a tela de edição. Será a mesma tela de Novo Task, porém com o registro selecionado. 
+						<br/>
+						<br/>
+						Quando aberta a tela de Novo/Editar Task, basta preencher os campos Título e Status e clicar em Salvar para salvar seu registro. Para não o salvar basta clicar em Cancelar ou clicar fora da tela.
+						<br/>
+						<br/>
+						A esquerda de cada item consta um ícone de uma Lixeira: É onde poderá deletar seu registro. Clique no mesmo para aparecer uma tela de confirmação de deleção. Clique em Deletar caso queira realmente o deletar.
+						<br/>
+						<br/>
+						Abaixo da tabela Lista de Contribuintes há uma linha que mostrará o número de registros que constam para seu usuário e quais estão o sendo exibido. A direita desta linha há dois botões para alterar a página em que se encontra. A paginação desta lista é de 10(dez) registros.
+						<br/>
+						<br/>
+						Há 3 possíveis filtros na tela: Id, Título e Status. Basta preencher qual deseja e clicar no botão Aplicar Filtro. Caso deseje remover o filtro, remova o valor e clique no botão novamente.
+						<br/>
+						<br/>
+						A grid dos registros possui paginação de 10 itens. Para demonstração de conhecimento nesta foi feito um algorítimo para filtrar e paginar seus registros.
+						<br/>
+						<br/>
+						Faça bom uso do sistema. Obrigado.
+					</span>
+				</div>
+				
+				<div class="modal-footer text-right">
+					<a class="modal-action modal-close waves-effect waves-grey btn-flat pointer red white-text">Fechar</a>
+				</div>
+			</div>
+		</div>
+	</body>
+	
+	<script type="text/javascript">
+	
+		// Initialize collapse button
+		//$(".button-collapse").sideNav();
+		// Initialize collapsible (uncomment the line below if you use the dropdown variation)
+		//$('.collapsible').collapsible();
+		$(document).ready(function(){
+			// the "href" attribute of the modal trigger must specify the modal ID that wants to be triggered
+			$('.modal').modal();
+			$('.modalDeletar').modal();
+			$('.modalSobre').modal();
+			$('.modalSalarioMinimo').modal();
+			$('select').material_select();
+		});
+	  
+	</script>
+
+</html>
